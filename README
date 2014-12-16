@@ -1,0 +1,19 @@
+FRDM-K64_LUA
+============
+
+Basic embedded Lua 5.2.3 on top of FRDM-K64 MBED
+
+The following link is a FRDM-K64 project that embeds the latest Lua 5.2.3 code into the CMSIS MBED environment.
+It is meant to be a 'quick and dirty' reference design bringing a working Lua interpreter onto the K64 platform. As such,
+one should have an sd-card with the helloscript.lua (contained in the top-level folder of the project) copied to it.
+The code initially askes for a date string to demonstrate putting acceleration data (with time stamps) onto the sd-card
+into a file called acceldata.txt. It then calls the lua interpreter through a simple binding routine (simple_lua(L)).
+I could not get the stock fgets stream input functionality to work so I wrote a very simple line input stream utility
+(do_lua_getstring(char * b)) to stream the input line data to the lua interpreter. I have not done much testing but the
+basic stock lua stuff seems to work fine. I found it easier to develop the project by downloading an MBED project
+environment (with and sdcard file system environment) into Kinetis Design Studio (as a gcc make project) and debug there.
+I use a JLink debugger for advanced debugging/troubleshooting. The project compiled fine with the stock luaconf.h
+configuration but I have a sinle float configuration loaded in this project. Software double float (usual configuration
+for Lua) however works just fine. I hope that this project is useful to others and shows that this platform is powerful
+enough for rather advanced environments. By the way, you will need to change the tool path setting in the top-level
+Makefile to the location of your path to compile. I have found the best results with the linaro bare-metal tool chains.
