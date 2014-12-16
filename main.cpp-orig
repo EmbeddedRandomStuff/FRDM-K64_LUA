@@ -1,0 +1,135 @@
+#include "mbed.h"
+#include "SDFileSystem.h"
+#include "FXOS8700Q.h"
+
+SDFileSystem sd(PTE3, PTE1, PTE2, PTE4, "sd"); // MOSI, MISO, SCK, CS
+Serial pc(USBTX, USBRX);
+FILE *fp;
+char buffer[1024];
+
+//define some led's
+DigitalOut red  (LED_RED);
+DigitalOut green(LED_GREEN);
+DigitalOut blue (LED_BLUE);
+
+
+#include "mbed.h"
+#include "FXOS8700Q.h"
+ 
+ 
+//FXOS8700Q acc( A4, A5, FXOS8700CQ_SLAVE_ADDR0); // Proper Ports and I2C address for Freescale Multi Axis shield
+//FXOS8700Q mag( A4, A5, FXOS8700CQ_SLAVE_ADDR0); // Proper Ports and I2C address for Freescale Multi Axis shield
+FXOS8700Q_acc acc( PTE25, PTE24, FXOS8700CQ_SLAVE_ADDR1); // Proper Ports and I2C Address for K64F Freedom board
+FXOS8700Q_mag mag( PTE25, PTE24, FXOS8700CQ_SLAVE_ADDR1); // Proper Ports and I2C Address for K64F Freedom board
+ 
+
+ 
+MotionSensorDataUnits mag_data;
+MotionSensorDataUnits acc_data;
+ 
+MotionSensorDataCounts mag_raw;
+MotionSensorDataCounts acc_raw;
+ 
+ 
+void Blink_Red(int numtimes)
+{
+    while(numtimes > 0)
+    {
+        red = (numtimes&1);
+        numtimes--;
+    }
+    red = 1;
+} 
+ 
+void Blink_Blue(int numtimes)
+{
+    while(numtimes > 0)
+    {
+        blue = (numtimes&1);
+        numtimes--;
+    }
+    blue = 1;
+} 
+ 
+void Blink_Green(int numtimes)
+{
+    while(numtimes > 0)
+    {
+        green = (numtimes&1);
+        numtimes--;
+    }
+    green = 1;
+} 
+ 
+ 
+void motiontest(int times) {
+float faX, faY, faZ;
+float fmX, fmY, fmZ;
+int16_t raX, raY, raZ;
+int16_t rmX, rmY, rmZ;
+acc.enable();
+printf("\r\n\nFXOS8700Q Who Am I= %X\r\n", acc.whoAmI());
+    while (times > 0) {
+        acc.getAxis(acc_data);
+        mag.getAxis(mag_data);
+        printf("FXOS8700Q ACC: X=%1.4f Y=%1.4f Z=%1.4f  ", acc_data.x, acc_data.y, acc_data.z);
+        printf("    MAG: X=%4.1f Y=%4.1f Z=%4.1f\r\n", mag_data.x, mag_data.y, mag_data.z);
+        acc.getX(&faX);
+        acc.getY(&faY);
+        acc.getZ(&faZ);
+        mag.getX(&fmX);
+        mag.getY(&fmY);
+        mag.getZ(&fmZ);
+        printf("FXOS8700Q ACC: X=%1.4f Y=%1.4f Z=%1.4f  ", faX, faY, faZ);
+        printf("    MAG: X=%4.1f Y=%4.1f Z=%4.1f\r\n", fmX, fmY, fmZ);
+        acc.getAxis(acc_raw);
+        mag.getAxis(mag_raw);
+        printf("FXOS8700Q ACC: X=%d Y=%d Z=%d  ", acc_raw.x, acc_raw.y, acc_raw.z);
+        printf("    MAG: X=%d Y=%d Z=%d\r\n", mag_raw.x, mag_raw.y, mag_raw.z);
+        acc.getX(&raX);
+        acc.getY(&raY);
+        acc.getZ(&raZ);
+        mag.getX(&rmX);
+        mag.getY(&rmY);
+        mag.getZ(&rmZ);                
+        printf("FXOS8700Q ACC: X=%d Y=%d Z=%d  ", raX, raY, raZ);
+        printf("    MAG: X=%d Y=%d Z=%d\r\n\n", rmX, rmY, rmZ);    
+        wait(1.0);
+        times--;
+    }
+    Blink_Blue(20);
+}
+
+int main() {
+    pc.baud(115200);
+    pc.printf("Initializing \r\n");
+    wait(2);
+    Blink_Green(20);
+    fp = fopen("/sd/hello.txt", "r");
+    if (fp != NULL) {
+        fclose(fp);
+        remove("/sd/hello.txt");
+        pc.printf("Remove an existing file with the same name \r\n");
+    }
+
+    printf("\nWriting data to the sd card \r\n");
+    fp = fopen("/sd/hello.txt", "w");
+    if (fp == NULL) {
+        pc.printf("Unable to write the file \r\n");
+    } else {
+        fprintf(fp, "mbed SDCard application!");
+        fclose(fp);
+        pc.printf("File successfully written! \r\n");
+    }
+
+    printf("\nReading data from the SD card. \r\n");
+    fp = fopen("/sd/hello.txt", "r");
+    if (fp != NULL) {
+        int size = fread(buffer, sizeof(char), 1024, fp);
+        printf("Number of data read: %d, text from hello.txt file: %s \r\n", size, buffer);
+        fclose(fp);
+    }
+    printf("End of Lab 4. \r\n\r\n");
+    motiontest(30);
+    Blink_Red(20);
+}
